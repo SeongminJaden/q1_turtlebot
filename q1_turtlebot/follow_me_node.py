@@ -212,31 +212,22 @@ class FollowMeNode(Node):
         dy = target_pos[1] - robot_pos[1]
         distance = math.sqrt(dx**2 + dy**2)
 
+        self.state = self.FOLLOWING
+
+        # 목표 반경 이내면 정지
+        if distance <= self.target_dist:
+            self.pub_cmd.publish(cmd)
+            self.pub_status.publish(String(
+                data=f'OK: dist={distance:.2f}m (반경 내)'))
+            return
+
+        # 반경 밖 → 타겟 방향으로 회전 + 전진
         target_angle = math.atan2(dy, dx)
-        # odom heading에 180도 오프셋 (UWB↔odom 좌표계 보정)
         angle_err = target_angle - (self.robot_yaw + math.pi)
         angle_err = math.atan2(math.sin(angle_err), math.cos(angle_err))
 
-        self.state = self.FOLLOWING
-        dist_err = distance - self.target_dist
-
-        if abs(dist_err) < self.tolerance:
-            self.pub_cmd.publish(cmd)
-            self.pub_status.publish(String(
-                data=f'OK: dist={distance:.2f}m'))
-            return
-
-        if abs(angle_err) > math.radians(5):
-            angular = max(-self.max_angular, min(self.max_angular,
-                                                  self.kp_ang * angle_err))
-            cmd.angular.z = angular
-            self.pub_cmd.publish(cmd)
-            self.pub_status.publish(String(
-                data=f'TURN: {math.degrees(angle_err):.0f}° ω={angular:.2f}'))
-            return
-
         linear = max(-self.max_speed, min(self.max_speed,
-                                           self.kp_lin * dist_err))
+                                           self.kp_lin * (distance - self.target_dist)))
         angular = max(-self.max_angular, min(self.max_angular,
                                               self.kp_ang * angle_err))
         cmd.linear.x = linear
