@@ -44,7 +44,7 @@ class UwbListenerNode(Node):
 
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('baud_rate', 115200)
-        self.declare_parameter('frame_id', 'map')
+        self.declare_parameter('frame_id', 'odom')
 
         self.port = self.get_parameter('serial_port').value
         self.baud = self.get_parameter('baud_rate').value

@@ -237,7 +237,7 @@ class FollowMeNode(Node):
 
         # 로봇 (파랑)
         m = Marker()
-        m.header.frame_id = 'map'
+        m.header.frame_id = 'odom'
         m.header.stamp = now
         m.ns = 'robot'
         m.id = mid; mid += 1
@@ -253,7 +253,7 @@ class FollowMeNode(Node):
 
         # 타겟 (빨강)
         m = Marker()
-        m.header.frame_id = 'map'
+        m.header.frame_id = 'odom'
         m.header.stamp = now
         m.ns = 'target'
         m.id = mid; mid += 1
@@ -269,7 +269,7 @@ class FollowMeNode(Node):
 
         # 연결선
         m = Marker()
-        m.header.frame_id = 'map'
+        m.header.frame_id = 'odom'
         m.header.stamp = now
         m.ns = 'line'
         m.id = mid; mid += 1
@@ -291,7 +291,7 @@ class FollowMeNode(Node):
         dy = target_pos[1] - robot_pos[1]
         dist = math.sqrt(dx**2 + dy**2)
         m = Marker()
-        m.header.frame_id = 'map'
+        m.header.frame_id = 'odom'
         m.header.stamp = now
         m.ns = 'info'
         m.id = mid; mid += 1
@@ -310,7 +310,7 @@ class FollowMeNode(Node):
         # 앵커
         for an_id, pos in self._anchors.items():
             m = Marker()
-            m.header.frame_id = 'map'
+            m.header.frame_id = 'odom'
             m.header.stamp = now
             m.ns = 'anchors'
             m.id = mid; mid += 1
@@ -325,7 +325,7 @@ class FollowMeNode(Node):
             ma.markers.append(m)
 
             m = Marker()
-            m.header.frame_id = 'map'
+            m.header.frame_id = 'odom'
             m.header.stamp = now
             m.ns = 'anchor_labels'
             m.id = mid; mid += 1
