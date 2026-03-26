@@ -25,6 +25,7 @@ setup(
             'odom_uwb_compare = q1_turtlebot.odom_uwb_compare_node:main',
             'follow_me = q1_turtlebot.follow_me_node:main',
             'geofence = q1_turtlebot.geofence_node:main',
+            'uwb_listener = q1_turtlebot.uwb_listener_node:main',
         ],
     },
 )
