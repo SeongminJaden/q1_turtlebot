@@ -223,7 +223,7 @@ class FollowMeNode(Node):
 
         # 반경 밖 → 타겟 방향으로 회전 + 전진
         target_angle = math.atan2(dy, dx)
-        angle_err = target_angle - (self.robot_yaw + math.pi)
+        angle_err = target_angle - self.robot_yaw
         angle_err = math.atan2(math.sin(angle_err), math.cos(angle_err))
 
         linear = max(-self.max_speed, min(self.max_speed,
