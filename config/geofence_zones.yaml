@@ -1,35 +1,60 @@
 # Geofencing 구역 설정
 # 좌표 단위: m (UWB 앵커 기준 좌표계)
+# 앵커 범위: AN0(0,0) AN1(6.1,0) AN2(6.1,7.04) AN3(0,7.04)
+#
+# shape: rect (사각형) 또는 poly (폴리곤)
+# type: forbidden (진입금지), slowdown (감속), warn (경고), allowed (허용)
 
 geofence:
   ros__parameters:
     robot_tag_id: "25A0"
     qf_threshold: 30
-    zone_count: 3
+    zone_count: 5
 
-    # 구역 0: 진입 금지
-    zone_0_name: "위험 구역"
-    zone_0_type: "forbidden"
-    zone_0_x_min: 3.0
-    zone_0_y_min: 2.0
-    zone_0_x_max: 4.5
-    zone_0_y_max: 3.5
-    zone_0_speed_limit: 0.0
+    # 구역 0: 충전 구역 (허용) - 사각형
+    zone_0_name: "충전 구역"
+    zone_0_type: "allowed"
+    zone_0_shape: "rect"
+    zone_0_x_min: 0.5
+    zone_0_y_min: 5.5
+    zone_0_x_max: 2.5
+    zone_0_y_max: 6.5
+    zone_0_speed_limit: 1.0
 
-    # 구역 1: 감속
+    # 구역 1: 보행자 구역 (감속) - 사각형
     zone_1_name: "보행자 구역"
     zone_1_type: "slowdown"
-    zone_1_x_min: -1.5
-    zone_1_y_min: -1.0
-    zone_1_x_max: 1.5
-    zone_1_y_max: 1.0
-    zone_1_speed_limit: 0.15
+    zone_1_shape: "rect"
+    zone_1_x_min: 2.0
+    zone_1_y_min: 2.5
+    zone_1_x_max: 4.0
+    zone_1_y_max: 4.5
+    zone_1_speed_limit: 0.08
 
-    # 구역 2: 경고
-    zone_2_name: "작업 구역"
-    zone_2_type: "warn"
-    zone_2_x_min: -3.0
-    zone_2_y_min: -3.0
-    zone_2_x_max: -1.0
-    zone_2_y_max: -1.0
-    zone_2_speed_limit: 1.0
+    # 구역 2: 좌측 하단 벽 (진입금지) - 사각형
+    zone_2_name: "벽 구역 L"
+    zone_2_type: "forbidden"
+    zone_2_shape: "rect"
+    zone_2_x_min: 0.0
+    zone_2_y_min: 0.0
+    zone_2_x_max: 1.0
+    zone_2_y_max: 1.5
+    zone_2_speed_limit: 0.0
+
+    # 구역 3: 우측 하단 장애물 (진입금지) - 사각형
+    zone_3_name: "장애물"
+    zone_3_type: "forbidden"
+    zone_3_shape: "rect"
+    zone_3_x_min: 4.5
+    zone_3_y_min: 0.0
+    zone_3_x_max: 6.1
+    zone_3_y_max: 1.5
+    zone_3_speed_limit: 0.0
+
+    # 구역 4: 작업 구역 (경고) - 폴리곤 (삼각형)
+    zone_4_name: "작업 구역"
+    zone_4_type: "warn"
+    zone_4_shape: "poly"
+    zone_4_points_x: [4.5, 6.0, 5.25]
+    zone_4_points_y: [5.0, 5.0, 7.0]
+    zone_4_speed_limit: 1.0
