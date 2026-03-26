@@ -10,5 +10,5 @@ follow_me:
     max_angular: 1.988         # 최대 회전 속도 (burger 2.84 * 70%)
     kp_linear: 0.5
     kp_angular: 1.5
-    qf_threshold: 40
+    qf_threshold: 30
     timeout_sec: 2.0

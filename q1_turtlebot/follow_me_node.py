@@ -149,6 +149,8 @@ class FollowMeNode(Node):
         except (ValueError, IndexError):
             return
 
+        self.get_logger().info(f'{tag_id} ({x:.2f},{y:.2f}) QF={qf}')
+
         if qf < self.qf_thresh:
             return  # QF 낮은 데이터 무시
 
