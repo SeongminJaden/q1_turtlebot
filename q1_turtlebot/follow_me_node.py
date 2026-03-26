@@ -204,7 +204,7 @@ class FollowMeNode(Node):
                 data=f'OK: dist={distance:.2f}m'))
             return
 
-        if abs(angle_err) > math.radians(30):
+        if abs(angle_err) > math.radians(5):
             angular = max(-self.max_angular, min(self.max_angular,
                                                   self.kp_ang * angle_err))
             cmd.angular.z = angular
