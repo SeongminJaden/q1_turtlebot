@@ -70,6 +70,11 @@ class FollowMeNode(Node):
         self.state = self.IDLE
         self._lock = threading.Lock()
 
+        # 이전 위치 (점프 필터용)
+        self._prev_robot = None
+        self._prev_target = None
+        self._max_jump = 0.5  # 0.5m 이상 점프하면 무시
+
         # 앵커 (시각화용)
         self._anchors = {
             'AN0': {'x': 0.0, 'y': 0.0},
@@ -146,9 +151,21 @@ class FollowMeNode(Node):
 
         with self._lock:
             if tag_id == self.robot_tag:
+                if self._prev_robot is not None:
+                    jump = math.sqrt((x - self._prev_robot[0])**2 +
+                                     (y - self._prev_robot[1])**2)
+                    if jump > self._max_jump:
+                        return  # 점프 무시
+                self._prev_robot = [x, y]
                 self.robot_pos = [x, y]
                 self.robot_qf = qf
             elif tag_id == self.target_tag:
+                if self._prev_target is not None:
+                    jump = math.sqrt((x - self._prev_target[0])**2 +
+                                     (y - self._prev_target[1])**2)
+                    if jump > self._max_jump:
+                        return  # 점프 무시
+                self._prev_target = [x, y]
                 self.target_pos = [x, y]
                 self.target_qf = qf
                 self.last_target_time = time.time()
