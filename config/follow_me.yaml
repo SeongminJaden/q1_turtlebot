@@ -12,4 +12,3 @@ follow_me:
     kp_angular: 1.5
     qf_threshold: 30
     timeout_sec: 2.0
-    iqr_window: 20            # IQR 필터 슬라이딩 윈도우 크기

@@ -2,19 +2,18 @@
 UWB Listener Node (standalone, q1_gateway_msgs 불필요).
 
 Listener USB 시리얼에서 태그 위치를 읽어
-IQR 필터링 후 visualization_msgs/MarkerArray로 RViz2에 표시합니다.
+visualization_msgs/MarkerArray로 RViz2에 표시합니다.
 
 실행:
   ros2 run q1_turtlebot uwb_listener
+  ros2 run q1_turtlebot uwb_listener --ros-args -p serial_port:=/dev/ttyUSB1
 
 Serial format:
   POS,<idx>,<tagID>,<x>,<y>,<z>,<qf>[,<flags>]
 """
 
 import threading
-from collections import deque
 
-import numpy as np
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Point, PointStamped
@@ -27,42 +26,6 @@ except ImportError:
     raise ImportError(
         "pyserial is required. Install with: pip3 install pyserial"
     )
-
-
-class IQRFilter:
-    """슬라이딩 윈도우 IQR 필터."""
-
-    def __init__(self, window_size=20):
-        self.window_size = window_size
-        self.buf_x = deque(maxlen=window_size)
-        self.buf_y = deque(maxlen=window_size)
-        self.buf_z = deque(maxlen=window_size)
-
-    def update(self, x, y, z):
-        """새 값을 추가하고, IQR 범위 내이면 필터된 값 반환. 이상치이면 None."""
-        # 윈도우가 아직 안 찼으면 그대로 통과
-        if len(self.buf_x) < 5:
-            self.buf_x.append(x)
-            self.buf_y.append(y)
-            self.buf_z.append(z)
-            return x, y, z
-
-        # IQR 체크
-        for buf, val in [(self.buf_x, x), (self.buf_y, y), (self.buf_z, z)]:
-            arr = np.array(buf)
-            q1 = np.percentile(arr, 25)
-            q3 = np.percentile(arr, 75)
-            iqr = q3 - q1
-            lower = q1 - 1.5 * iqr
-            upper = q3 + 1.5 * iqr
-            if val < lower or val > upper:
-                return None  # 이상치
-
-        # 통과한 값만 버퍼에 추가
-        self.buf_x.append(x)
-        self.buf_y.append(y)
-        self.buf_z.append(z)
-        return x, y, z
 
 
 class UwbListenerNode(Node):
@@ -82,30 +45,26 @@ class UwbListenerNode(Node):
         self.declare_parameter('serial_port', '/dev/ttyUSB0')
         self.declare_parameter('baud_rate', 115200)
         self.declare_parameter('frame_id', 'map')
-        self.declare_parameter('iqr_window', 20)
 
         self.port = self.get_parameter('serial_port').value
         self.baud = self.get_parameter('baud_rate').value
         self.frame_id = self.get_parameter('frame_id').value
-        self.iqr_window = self.get_parameter('iqr_window').value
 
         # Anchors (mm → m)
         self._anchors = {
-            'AN0': {'x': 0.0,    'y': 0.0,   'z': 0.0},
-            'AN1': {'x': -6.1,   'y': 0.0,   'z': 0.0},
-            'AN2': {'x': -6.1,   'y': 7.04,  'z': 0.0},
-            'AN3': {'x': 0.0,    'y': 7.04,  'z': 0.0},
+            'AN0': {'x': 0.0,  'y': 0.0,   'z': 0.0},
+            'AN1': {'x': 6.1,  'y': 0.0,   'z': 0.0},
+            'AN2': {'x': 6.1,  'y': 7.04,  'z': 0.0},
+            'AN3': {'x': 0.0,  'y': 7.04,  'z': 0.0},
         }
 
         # Publishers
         self.pub_markers = self.create_publisher(MarkerArray, 'uwb/markers', 10)
         self.pub_status = self.create_publisher(String, 'uwb/status', 10)
 
-        # Tag data & filters
+        # Tag data
         self._tags = {}
         self._tag_colors = {}
-        self._filters = {}  # {tag_id: IQRFilter}
-        self._dropped = {}  # {tag_id: count}
         self._lock = threading.Lock()
 
         # Publish markers at 5Hz
@@ -160,7 +119,7 @@ class UwbListenerNode(Node):
             return
         try:
             tag_id = parts[2].strip()
-            x = -float(parts[3])  # X축 반전 (UWB → ROS 좌표계)
+            x = float(parts[3])
             y = float(parts[4])
             z = float(parts[5])
             qf = int(parts[6])
@@ -168,28 +127,13 @@ class UwbListenerNode(Node):
             return
 
         with self._lock:
-            # IQR 필터 생성/적용
-            if tag_id not in self._filters:
-                self._filters[tag_id] = IQRFilter(self.iqr_window)
-                self._dropped[tag_id] = 0
-
-            result = self._filters[tag_id].update(x, y, z)
-
-            if result is None:
-                self._dropped[tag_id] += 1
-                self.get_logger().debug(
-                    f'IQR filtered out: {tag_id} ({x:.2f}, {y:.2f}, {z:.2f})')
-                return
-
-            fx, fy, fz = result
-            self._tags[tag_id] = {'x': fx, 'y': fy, 'z': fz, 'qf': qf}
+            self._tags[tag_id] = {'x': x, 'y': y, 'z': z, 'qf': qf}
             if tag_id not in self._tag_colors:
                 idx = len(self._tag_colors) % len(self.COLORS)
                 self._tag_colors[tag_id] = self.COLORS[idx]
 
         self.get_logger().info(
-            f'TAG {tag_id}: ({fx:.2f}, {fy:.2f}, {fz:.2f}) qf={qf}'
-            f'  dropped={self._dropped[tag_id]}')
+            f'TAG {tag_id}: ({x:.2f}, {y:.2f}, {z:.2f}) qf={qf}')
 
     def _publish_markers(self):
         with self._lock:
