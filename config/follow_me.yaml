@@ -1,0 +1,14 @@
+# Follow Me 설정
+
+follow_me:
+  ros__parameters:
+    robot_tag_id: "DEV_TAG_00"
+    target_tag_id: "HUMAN_01"
+    target_distance: 1.0      # 목표 추종 거리 (m)
+    distance_tolerance: 1.0   # 허용 오차 (m)
+    max_speed: 0.3            # 최대 속도 (m/s)
+    max_angular: 1.0          # 최대 회전 속도 (rad/s)
+    kp_linear: 0.5
+    kp_angular: 1.5
+    qf_threshold: 30
+    timeout_sec: 2.0

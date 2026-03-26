@@ -1,0 +1,35 @@
+# Geofencing 구역 설정
+# 좌표 단위: m (UWB 앵커 기준 좌표계)
+
+geofence:
+  ros__parameters:
+    robot_tag_id: "DEV_TAG_00"
+    qf_threshold: 30
+    zone_count: 3
+
+    # 구역 0: 진입 금지
+    zone_0_name: "위험 구역"
+    zone_0_type: "forbidden"
+    zone_0_x_min: 3.0
+    zone_0_y_min: 2.0
+    zone_0_x_max: 4.5
+    zone_0_y_max: 3.5
+    zone_0_speed_limit: 0.0
+
+    # 구역 1: 감속
+    zone_1_name: "보행자 구역"
+    zone_1_type: "slowdown"
+    zone_1_x_min: -1.5
+    zone_1_y_min: -1.0
+    zone_1_x_max: 1.5
+    zone_1_y_max: 1.0
+    zone_1_speed_limit: 0.15
+
+    # 구역 2: 경고
+    zone_2_name: "작업 구역"
+    zone_2_type: "warn"
+    zone_2_x_min: -3.0
+    zone_2_y_min: -3.0
+    zone_2_x_max: -1.0
+    zone_2_y_max: -1.0
+    zone_2_speed_limit: 1.0
