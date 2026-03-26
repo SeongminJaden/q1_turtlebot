@@ -69,6 +69,14 @@ class GeofenceNode(Node):
         self.blocked = False
         self._lock = threading.Lock()
 
+        # 앵커 (시각화용)
+        self._anchors = {
+            'AN0': {'x': 0.0, 'y': 0.0},
+            'AN1': {'x': 6.1, 'y': 0.0},
+            'AN2': {'x': 6.1, 'y': 7.04},
+            'AN3': {'x': 0.0, 'y': 7.04},
+        }
+
         # 구독
         self.create_subscription(Twist, '/cmd_vel_input', self._cmd_input_cb, 10)
 
@@ -287,6 +295,41 @@ class GeofenceNode(Node):
             c = ColorRGBA(r=1.0, g=0.0, b=0.0, a=0.9) if self.blocked else \
                 ColorRGBA(r=0.2, g=0.2, b=1.0, a=0.9)
             m.color = c
+            m.lifetime.sec = 1
+            ma.markers.append(m)
+
+        # 앵커
+        mid = 100
+        for an_id, pos in self._anchors.items():
+            m = Marker()
+            m.header.frame_id = 'odom'
+            m.header.stamp = now
+            m.ns = 'anchors'
+            m.id = mid; mid += 1
+            m.type = Marker.CUBE
+            m.action = Marker.ADD
+            m.pose.position.x = pos['x']
+            m.pose.position.y = pos['y']
+            m.pose.orientation.w = 1.0
+            m.scale.x = m.scale.y = m.scale.z = 0.15
+            m.color = ColorRGBA(r=0.6, g=0.6, b=0.6, a=0.8)
+            m.lifetime.sec = 1
+            ma.markers.append(m)
+
+            m = Marker()
+            m.header.frame_id = 'odom'
+            m.header.stamp = now
+            m.ns = 'anchor_labels'
+            m.id = mid; mid += 1
+            m.type = Marker.TEXT_VIEW_FACING
+            m.action = Marker.ADD
+            m.pose.position.x = pos['x']
+            m.pose.position.y = pos['y']
+            m.pose.position.z = 0.3
+            m.pose.orientation.w = 1.0
+            m.scale.z = 0.12
+            m.color = ColorRGBA(r=0.8, g=0.8, b=0.8, a=1.0)
+            m.text = an_id
             m.lifetime.sec = 1
             ma.markers.append(m)
 
