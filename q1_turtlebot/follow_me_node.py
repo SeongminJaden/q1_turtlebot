@@ -149,6 +149,9 @@ class FollowMeNode(Node):
         except (ValueError, IndexError):
             return
 
+        if qf < self.qf_thresh:
+            return  # QF 낮은 데이터 무시
+
         with self._lock:
             if tag_id == self.robot_tag:
                 if self._prev_robot is not None:
