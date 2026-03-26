@@ -19,6 +19,7 @@ import numpy as np
 import rclpy
 from rclpy.node import Node
 from geometry_msgs.msg import Point, Twist
+from nav_msgs.msg import Odometry
 from std_msgs.msg import String, ColorRGBA
 from visualization_msgs.msg import Marker, MarkerArray
 
@@ -91,6 +92,7 @@ class FollowMeNode(Node):
         self.target_pos = None
         self.robot_qf = 0
         self.target_qf = 0
+        self.robot_yaw = 0.0
         self.last_target_time = 0.0
         self.state = self.IDLE
         self.robot_dropped = 0
@@ -102,6 +104,7 @@ class FollowMeNode(Node):
 
         # 구독
         self.create_subscription(TagArray, 'q1/tags', self._tags_cb, 10)
+        self.create_subscription(Odometry, '/odom', self._odom_cb, 10)
 
         # 발행
         self.pub_cmd = self.create_publisher(Twist, '/cmd_vel', 10)
@@ -136,6 +139,14 @@ class FollowMeNode(Node):
                 self.target_qf = tag.quality
                 self.last_target_time = time.time()
 
+    def _odom_cb(self, msg: Odometry):
+        """로봇 heading(yaw)을 odom에서 추출."""
+        q = msg.pose.pose.orientation
+        # quaternion to yaw
+        siny_cosp = 2.0 * (q.w * q.z + q.x * q.y)
+        cosy_cosp = 1.0 - 2.0 * (q.y * q.y + q.z * q.z)
+        self.robot_yaw = math.atan2(siny_cosp, cosy_cosp)
+
     def _control_loop(self):
         cmd = Twist()
 
@@ -164,7 +175,13 @@ class FollowMeNode(Node):
         dx = self.target_pos[0] - self.robot_pos[0]
         dy = self.target_pos[1] - self.robot_pos[1]
         distance = math.sqrt(dx**2 + dy**2)
-        angle = math.atan2(dy, dx)
+
+        # 타겟까지의 절대 각도
+        target_angle = math.atan2(dy, dx)
+
+        # 로봇 heading 기준 상대 각도 (-pi ~ pi)
+        angle_err = target_angle - self.robot_yaw
+        angle_err = math.atan2(math.sin(angle_err), math.cos(angle_err))
 
         self.state = self.FOLLOWING
 
@@ -178,11 +195,22 @@ class FollowMeNode(Node):
                 data=f'FOLLOWING: dist={distance:.2f}m (목표 범위 내)'))
             return
 
+        # 각도 오차가 크면 먼저 회전
+        if abs(angle_err) > math.radians(30):
+            angular = max(-self.max_angular, min(self.max_angular,
+                                                  self.kp_ang * angle_err))
+            cmd.angular.z = angular
+            self.pub_cmd.publish(cmd)
+            self.pub_status.publish(String(
+                data=f'TURNING: dist={distance:.2f}m  angle_err={math.degrees(angle_err):.1f}°  '
+                     f'ω={angular:.2f}'))
+            return
+
         # P 제어
         linear = max(-self.max_speed, min(self.max_speed,
                                            self.kp_lin * dist_err))
         angular = max(-self.max_angular, min(self.max_angular,
-                                              self.kp_ang * angle))
+                                              self.kp_ang * angle_err))
 
         cmd.linear.x = linear
         cmd.angular.z = angular
@@ -190,6 +218,7 @@ class FollowMeNode(Node):
 
         self.pub_status.publish(String(
             data=f'FOLLOWING: dist={distance:.2f}m  err={dist_err:+.2f}m  '
+                 f'yaw={math.degrees(self.robot_yaw):.1f}°  '
                  f'v={linear:.2f}  ω={angular:.2f}  '
                  f'dropped(R={self.robot_dropped},T={self.target_dropped})'))
 
