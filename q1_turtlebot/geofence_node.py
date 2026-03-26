@@ -161,6 +161,8 @@ class GeofenceNode(Node):
         except (ValueError, IndexError):
             return
 
+        self.get_logger().info(f'{tag_id} ({x:.2f},{y:.2f}) QF={qf}')
+
         if tag_id != self.robot_tag:
             return
 
