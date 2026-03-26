@@ -191,7 +191,8 @@ class FollowMeNode(Node):
         distance = math.sqrt(dx**2 + dy**2)
 
         target_angle = math.atan2(dy, dx)
-        angle_err = target_angle - self.robot_yaw
+        # odom heading에 180도 오프셋 (UWB↔odom 좌표계 보정)
+        angle_err = target_angle - (self.robot_yaw + math.pi)
         angle_err = math.atan2(math.sin(angle_err), math.cos(angle_err))
 
         self.state = self.FOLLOWING
