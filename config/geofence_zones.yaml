@@ -3,7 +3,7 @@
 
 geofence:
   ros__parameters:
-    robot_tag_id: "DEV_TAG_00"
+    robot_tag_id: "25A0"
     qf_threshold: 30
     zone_count: 3
 
