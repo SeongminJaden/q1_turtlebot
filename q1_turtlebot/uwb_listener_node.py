@@ -91,10 +91,10 @@ class UwbListenerNode(Node):
 
         # Anchors (mm → m)
         self._anchors = {
-            'AN0': {'x': 0.0,   'y': 0.0,   'z': 0.0},
-            'AN1': {'x': 6.1,   'y': 0.0,   'z': 0.0},
-            'AN2': {'x': 6.1,   'y': 7.04,  'z': 0.0},
-            'AN3': {'x': 0.0,   'y': 7.04,  'z': 0.0},
+            'AN0': {'x': 0.0,   'y': 0.0,    'z': 0.0},
+            'AN1': {'x': 6.1,   'y': 0.0,    'z': 0.0},
+            'AN2': {'x': 6.1,   'y': -7.04,  'z': 0.0},
+            'AN3': {'x': 0.0,   'y': -7.04,  'z': 0.0},
         }
 
         # Publishers
@@ -161,7 +161,7 @@ class UwbListenerNode(Node):
         try:
             tag_id = parts[2].strip()
             x = float(parts[3])
-            y = float(parts[4])
+            y = -float(parts[4])  # Y축 반전 (UWB → ROS 좌표계)
             z = float(parts[5])
             qf = int(parts[6])
         except (ValueError, IndexError):
